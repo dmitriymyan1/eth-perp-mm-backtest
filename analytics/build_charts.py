@@ -443,6 +443,8 @@ def main() -> None:
                             "fills_per_day": m["fills"] / 2, "taker_fills": int((fills["kind"] == "taker").sum()),
                             "pnl": adj["total_pnl"]})
     summary["latency"] = sorted(latency, key=lambda r: (r["strategy"], r["order_ms"]))
+    m, p = pick("output/fv_h30s", "fair_value", HALF_SPREAD, 0.05)
+    summary["ml_30s_backtest_pnl"] = load_fills(p, m)[1]["total_pnl"]
 
     (OUT / "data" / "summary.json").write_text(json.dumps(summary, indent=2, default=float))
     print("charts:", sorted(p.name for p in (OUT / "charts").glob("*.png")))
