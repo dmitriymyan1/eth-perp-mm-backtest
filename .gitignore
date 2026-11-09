@@ -1,0 +1,10 @@
+# raw task data, trained models and backtest runs: large and regenerable
+/data/
+/models/
+/output/
+
+__pycache__/
+*.pyc
+.pytest_cache/
+tmp-explain-tests/
+.omc/

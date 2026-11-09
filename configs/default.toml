@@ -1,0 +1,50 @@
+# Backtest configuration. Every key is optional: a missing key takes the default in mm/config.py.
+# Override one key from the CLI:  python run_backtest.py --set fills.cross_rule=never
+# Run a grid:                      python run_backtest.py --sweep fills.cross_rule=never,confirmed,always
+
+[data]
+path = "data"
+levels = 5              # book depth used for the queue position (1..20)
+tick = 0.1              # price grid of the data
+# days = "2026-03-20,2026-03-21"   # only these days; default all
+
+[strategy]
+name = "mid"            # mid | fair_value
+half_spread = 0.05      # USD from mid, rounded outward to the tick (0.05 = join the touch at a 1-tick spread)
+lot = 1.0               # order size, ETH
+# max_position = 10.0   # soft inventory limit, ETH; default 10 lots
+# signal_path = "models/fair_value_signal.parquet"   # fair_value: predictions (train_fair_value.py)
+inventory_skew = 0.0    # fair_value: USD per ETH of position (leans quotes against inventory)
+signal_cap_bp = 5.0     # fair_value: clip of the predicted 1 s move
+# pull_threshold_bp = 0.1   # fair_value: do not quote a side if the model is against it by more (bp)
+funding_target_position = 0.0  # fair_value: hold -sign(funding) * this ETH (funding harvest; 0 = off)
+funding_threshold_bp = 0.0     # fair_value: act only if |funding rate| >= this (bp per interval)
+funding_fair_hours = 0.0       # fair_value: shift fair value by expected funding over this holding time
+signal_deadband_bp = 0.0       # fair_value: use the model only if |prediction| >= this (bp)
+signal_release_ratio = 0.5     # fair_value: hysteresis, switch off below deadband * ratio
+
+[latency]
+market_data_ms = 1.0    # exchange -> bot, book snapshots
+order_ms = 2.0          # bot -> exchange, orders and cancels (one way)
+ack_ms = 2.0            # exchange -> bot, fill reports
+max_book_age_s = 5.0    # pull quotes if no new book arrives; 0 = off
+
+[fees]
+venue = "cex_pro"       # fee preset: cex_pro (maker 0 / taker 1.7 bp) | cex_mm_rebate (-0.5 / 1.5) | hyperliquid (1.5 / 4.5) | bybit (2.0 / 5.5)
+# maker_bps = 1.5       # override the preset; negative = rebate
+# taker_bps = 4.5
+
+[funding]
+interval_hours = 1.0    # settlement interval
+rate_hours = 1.0        # period the data rate is quoted for (the data rate is hourly)
+
+[fills]
+model = "queue"           # queue | simple
+cross_rule = "confirmed"  # never | confirmed | profitable | always
+cancel_rule = "pro_rata"  # back | pro_rata | front (queue model only)
+# pickoff_fee_bps = 2.4   # profitable: sniper taker fee; default = taker fee
+pickoff_fair_ms = 0.0     # profitable: sniper fair price = mid this many ms later (information lead)
+
+[output]
+dir = "output"
+sample_interval_s = 1.0   # equity sampling
